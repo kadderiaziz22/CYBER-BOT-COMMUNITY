@@ -1,40 +1,48 @@
-/** I am doing this coding with a lot of difficulty, please don't post it yourself¯\_(ツ)_/¯ **/
 module.exports.config = {
-  name: "islam",
+  name: "ردتلقائي",
   version: "1.0.0",
-  hasPermssion: 0,
-  credits: "Islamick Chat",
-  description: "prefix VEDIO",
-  commandCategory: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
-  usages: "love10 vedio",
-  cooldowns: 5,
-  dependencies: {
-    "request":"",
-    "fs-extra":"",
-    "axios":""
+  hasPermssion: 1,
+  credits: "Replit Assistant",
+  description: "الرد التلقائي على جميع الرسائل",
+  commandCategory: "النظام",
+  usages: "تشغيل/ايقاف [النص]",
+  cooldowns: 5
+};
+
+const fs = require('fs-extra');
+const pathFile = __dirname + '/cache/autoreply.json';
+
+if (!fs.existsSync(pathFile)) {
+  fs.writeFileSync(pathFile, JSON.stringify({
+    enabled: false,
+    message: "شكراً لرسالتك! 🌟"
+  }));
+}
+
+module.exports.handleEvent = async function({ api, event }) {
+  if (event.type !== "message" && event.type !== "message_reply") return;
+  
+  const data = JSON.parse(fs.readFileSync(pathFile));
+  if (data.enabled && event.senderID !== api.getCurrentUserID()) {
+    api.sendMessage(data.message, event.threadID, event.messageID);
   }
 };
 
-module.exports.run = async({api,event,args,client,Users,Threads,__GLOBAL,Currencies}) => {
-const axios = global.nodemodule["axios"];
-const request = global.nodemodule["request"];
-const fs = global.nodemodule["fs-extra"];
-   var hi = ["•┄┅════❁🌺❁════┅┄•\n\nআসসালামু আলাইকুম-!!🖤💫প্রিয় ভাই ও বন - তুমাদের জন্য নিয়ে আসলাম আমি ইসলামিক ভিডিও \n\n•┄┅════❁🌺❁════┅┄•"];
-  var know = hi[Math.floor(Math.random() * hi.length)];
-  var link = [
-"https://drive.google.com/uc?id=1Y5O3qRzxt-MFR4vVhz0QsMwHQmr-34iH",
-"https://drive.google.com/uc?id=1YDyNrN-rnzsboFmYm8Q5-FhzoJD9WV3O",
-"https://drive.google.com/uc?id=1XzgEzopoYBfuDzPsml5-RiRnItXVx4zW",
-"https://drive.google.com/uc?id=1YEeal83MYRI9sjHuEhJdjXZo9nVZmfHD",
-"https://drive.google.com/uc?id=1YMEDEKVXjnHE0KcCJHbcT2PSbu8uGSk4",
-"https://drive.google.com/uc?id=1YRb2k01n4rIdA9Vf69oxIOdv54JyAprD",
-"https://drive.google.com/uc?id=1YSQCTVhrHTNl6B9xSBCQ7frBJ3bp_KoA",
-"https://drive.google.com/uc?id=1Yc9Rwwdpqha1AWeEb5BXV-goFbag0441",
-"https://drive.google.com/uc?id=1YcwtkC5wRbbHsAFuEQYQuwQsH4-ZiBS8",
-"https://drive.google.com/uc?id=1YhfyPl8oGmsIAIOjWQyzQYkDdZUPSalo",
-
-];
-     var callback = () => api.sendMessage({body:` ${know} `,attachment: fs.createReadStream(__dirname + "/cache/15.mp4")}, event.threadID, () => fs.unlinkSync(__dirname + "/cache/15.mp4"));    
-      return request(encodeURI(link[Math.floor(Math.random() * link.length)])).pipe(fs.createWriteStream(__dirname+"/cache/15.mp4")).on("close",() => callback());
-   };
- 
+module.exports.run = async function({ api, event, args }) {
+  const data = JSON.parse(fs.readFileSync(pathFile));
+  
+  if (args[0] === "تشغيل") {
+    data.enabled = true;
+    if (args[1]) data.message = args.slice(1).join(" ");
+    fs.writeFileSync(pathFile, JSON.stringify(data));
+    api.sendMessage("✅ تم تفعيل الرد التلقائي\nالرسالة: " + data.message, event.threadID);
+  }
+  else if (args[0] === "ايقاف") {
+    data.enabled = false;
+    fs.writeFileSync(pathFile, JSON.stringify(data));
+    api.sendMessage("⭕ تم إيقاف الرد التلقائي", event.threadID);
+  }
+  else {
+    api.sendMessage("❓ الاستخدام:\nردتلقائي تشغيل [النص]\nردتلقائي ايقاف", event.threadID);
+  }
+};
